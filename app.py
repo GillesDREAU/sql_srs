@@ -1,22 +1,25 @@
+# pylint: disable=missing-module-docstring
+
+import io
+
 import streamlit as st
 import pandas as pd
 import duckdb
-import io
 
-csv = '''
+csv = """
 beverage, price
 orange juice, 2.5
 expresso, 2
 tea, 3
-'''
+"""
 beverages = pd.read_csv(io.StringIO(csv))
 
-csv2 = '''
+csv2 = """
 food_item, food_price
 cookie, 2.5
 chocolatine, 2
 muffin, 3
-'''
+"""
 food_items = pd.read_csv(io.StringIO(csv2))
 
 answer = """
@@ -27,21 +30,23 @@ CROSS JOIN food_items
 solution = duckdb.sql(answer).df()
 
 
-st.write("""
+st.write(
+    """
 # SQL SRS
 Spaced Repetition System SQL practice
-""")
+"""
+)
 with st.sidebar:
     option = st.selectbox(
-       "How would you like to review ?",
-       ("Joins", "Group By", "Windows Functions"),
-       index=None,
-       placeholder="Select topic...",
+        "How would you like to review ?",
+        ("Joins", "Group By", "Windows Functions"),
+        index=None,
+        placeholder="Select topic...",
     )
-    st.write('You selected:', option)
+    st.write("You selected:", option)
 
 
-st.header('enter your code:')
+st.header("enter your code:")
 query = st.text_area(label="votre code SQL ici", key="user_input")
 if query:
     result = duckdb.sql(query).df()
