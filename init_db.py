@@ -5,7 +5,7 @@ import duckdb
 con = duckdb.connect(database="data/exercises_sql_tables.duckdb", read_only=False)
 
 # ------------------------------------------------------
-# EXERCICES LIST
+# EXERCISES LIST
 # -----------------------------------------------------
 data = {
     "theme": ["cross_joins", "window_functions"],
@@ -14,9 +14,12 @@ data = {
     "last_reviewed": ["1970-01-01", "1970-01-01"]
 }
 memory_state_df = pd.DataFrame(data)
-con.execute("CREATE TABLE IF NOT EXISTS memory_state AS SELECT * FROM memory_state_df")
+con.execute("CREATE OR REPLACE TABLE memory_state AS SELECT * FROM memory_state_df")
 
 
+# ------------------------------------------------------
+# CROSS JOIN EXERCISES
+# -----------------------------------------------------
 csv = """
 beverage, price
 orange juice, 2.5
