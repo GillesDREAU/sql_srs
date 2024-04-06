@@ -13,8 +13,7 @@ if "data" not in os.listdir():
 
 if "exercises_sql_tables.duckdb" not in os.listdir("data"):
     exec(open("init_db.py").read())
-    # subprocess.run([sys.executable, "init_db.py"])
-    # subprocess.run(["python", "init_db.py"])
+    # subprocess.run([f"{sys.executable}", "init_db.py"])
 
 con = duckdb.connect(database="data/exercises_sql_tables.duckdb", read_only=False)
 
@@ -24,16 +23,30 @@ st.write(
 Spaced Repetition System SQL practice
 """
 )
+
 with st.sidebar:
+    themes_list = (
+        con.execute(f"SELECT DISTINCT theme FROM memory_state").df()["theme"].tolist()
+    )
     theme = st.selectbox(
         "How would you like to review ?",
-        ("cross_joins", "Group By", "window_functions"),
+        themes_list,
         index=None,
         placeholder="Select topic...",
     )
-    st.write("You selected:", theme)
 
-    exercise = con.execute(f"SELECT * FROM memory_state WHERE theme = '{theme}'").df().sort_values("last_reviewed").reset_index(drop=True)
+    if theme:
+        st.write("You selected:", theme)
+        select_exercise_query = f"SELECT * FROM memory_state WHERE theme = '{theme}'"
+    else:
+        select_exercise_query = f"SELECT * FROM memory_state"
+
+    exercise = (
+        con.execute(select_exercise_query)
+        .df()
+        .sort_values("last_reviewed")
+        .reset_index(drop=True)
+    )
     st.write(exercise)
 
     exercise_name = exercise.loc[0, "exercise_name"]
@@ -58,8 +71,6 @@ if query:
 tab2, tab3 = st.tabs(["Tables", "Solution"])
 
 with tab2:
-    print(exercise.loc[0, "tables"])
-    print(type(exercise.loc[0, "tables"]))
     exercise_tables = exercise.loc[0, "tables"]
     for table in exercise_tables:
         st.write(f"table: {table}")
