@@ -3,8 +3,10 @@
 import os
 import sys
 import logging
+from datetime import date, timedelta
 import streamlit as st
 import duckdb
+
 
 if "data" not in os.listdir():
     logging.error(os.listdir())
@@ -16,6 +18,31 @@ if "exercises_sql_tables.duckdb" not in os.listdir("data"):
     # subprocess.run([f"{sys.executable}", "init_db.py"])
 
 con = duckdb.connect(database="data/exercises_sql_tables.duckdb", read_only=False)
+
+
+def check_user_solution(user_query: str) -> None:
+    """
+    Checks user's query with solution by:
+    1: checking columns
+    2: checking values
+    Args: user_query: string containing user's query
+    """
+    result = con.execute(user_query).df()
+    st.dataframe(result)
+    try:
+        result = result[solution_df.columns]
+        st.dataframe(result.compare(solution_df))
+        if result.compare(solution_df).shape == (0, 0):
+            st.write("Correct !")
+            st.balloons()
+    except KeyError as e:
+        st.write("Some columns are missing")
+    n_lines_differences = result.shape[0] - solution_df.shape[0]
+    if n_lines_differences != 0:
+        st.write(
+            f"result has a {n_lines_differences} lines difference with the solution"
+        )
+
 
 st.write(
     """
@@ -57,16 +84,21 @@ with st.sidebar:
 
 st.header("enter your code:")
 query = st.text_area(label="votre code SQL ici", key="user_input")
+
 if query:
-    result = con.execute(query).df()
-    st.dataframe(result)
+    check_user_solution(query)
 
-    try:
-        result = result[solution_df.columns]
-        st.dataframe(result.compare(solution_df))
-    except KeyError as e:
-        st.write("Some columns are missing")
+for n in (2, 7, 21):
+    if st.button(f"revoir dans {n} jours"):
+        next_review = date.today() + timedelta(days=n)
+        con.execute(
+            f"UPDATE memory_state SET last_reviewed = '{next_review}' WHERE exercise_name= '{exercise_name}'"
+        )
+        st.rerun()
 
+if st.button("Reset"):
+    con.execute(f"UPDATE memory_state SET last_reviewed = '1970-01-01'")
+    st.rerun()
 
 tab2, tab3 = st.tabs(["Tables", "Solution"])
 
